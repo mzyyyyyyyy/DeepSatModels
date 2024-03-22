@@ -1,8 +1,8 @@
 import torch
-from data.MTLCC.dataloader import get_dataloader as get_mtlcc_dataloader
-from data.MTLCC.data_transforms import MTLCC_transform
-from data.France.dataloader import get_dataloader as get_france_dataloader
-from data.France.data_transforms import France_segmentation_transform
+# from data.MTLCC.dataloader import get_dataloader as get_mtlcc_dataloader
+# from data.MTLCC.data_transforms import MTLCC_transform
+# from data.France.dataloader import get_dataloader as get_france_dataloader
+# from data.France.data_transforms import France_segmentation_transform
 from data.PASTIS24.dataloader import get_dataloader as get_pastis_dataloader
 from data.PASTIS24.data_transforms import PASTIS_segmentation_transform
 from utils.config_files_utils import get_params_values, read_yaml
@@ -25,20 +25,22 @@ def get_dataloaders(config):
     train_config['base_dir'] = DATASET_INFO[train_config['dataset']]['basedir']
     train_config['paths'] = DATASET_INFO[train_config['dataset']]['paths_train']
     if train_config['dataset'] == 'MTLCC':
-        dataloaders['train'] = get_mtlcc_dataloader(
-            paths_file=train_config['paths'], root_dir=train_config['base_dir'],
-            transform=MTLCC_transform(model_config, train_config, is_training=True),
-            batch_size=train_config['batch_size'], shuffle=True, num_workers=train_config['num_workers'])
+        pass
+        # dataloaders['train'] = get_mtlcc_dataloader(
+        #     paths_file=train_config['paths'], root_dir=train_config['base_dir'],
+        #     transform=MTLCC_transform(model_config, train_config, is_training=True),
+        #     batch_size=train_config['batch_size'], shuffle=True, num_workers=train_config['num_workers'])
     elif 'PASTIS' in train_config['dataset']:
         dataloaders['train'] = get_pastis_dataloader(
             paths_file=train_config['paths'], root_dir=train_config['base_dir'],
             transform=PASTIS_segmentation_transform(model_config, is_training=True),
             batch_size=train_config['batch_size'], shuffle=True, num_workers=train_config['num_workers'])
     else:
-        dataloaders['train'] = get_france_dataloader(
-            paths_file=train_config['paths'], root_dir=train_config['base_dir'],
-            transform=France_segmentation_transform(model_config, train_config, is_training=True),
-            batch_size=train_config['batch_size'], shuffle=True, num_workers=train_config['num_workers'])
+        pass
+        # dataloaders['train'] = get_france_dataloader(
+        #     paths_file=train_config['paths'], root_dir=train_config['base_dir'],
+        #     transform=France_segmentation_transform(model_config, train_config, is_training=True),
+        #     batch_size=train_config['batch_size'], shuffle=True, num_workers=train_config['num_workers'])
 
     # EVAL data --------------------------------------------------------------------------------------------------------
     eval_config['base_dir'] = DATASET_INFO[eval_config['dataset']]['basedir']

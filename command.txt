@@ -1,0 +1,1 @@
+python train_and_eval/segmentation_training_transf.py --config configs/PASTIS24/TSViT_fold1.yaml

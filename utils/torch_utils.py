@@ -10,7 +10,11 @@ def load_from_checkpoint(net, checkpoint, partial_restore=False, device=None):
     if os.path.isdir(checkpoint):
         checkpoint = max(glob.iglob(checkpoint + '/*.pth'), key=os.path.getctime)
         print("loading model from %s" % checkpoint)
-        saved_net = torch.load(checkpoint)
+        if device is None:
+            saved_net = torch.load(checkpoint)
+        else:
+            saved_net = torch.load(checkpoint, map_location=device)
+        saved_net = torch.load(checkpoint, map_location=device)
     elif os.path.isfile(checkpoint):
         print("loading model from %s" % checkpoint)
         if device is None:
@@ -45,7 +49,7 @@ def get_net_trainable_params(net):
     return trainable_params
     
     
-def get_device(device_ids, allow_cpu=False):
+def get_device(device_ids, allow_cpu=True):
     if torch.cuda.is_available():
         device = torch.device("cuda:%d" % device_ids[0])
     elif allow_cpu:

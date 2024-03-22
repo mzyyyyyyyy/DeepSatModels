@@ -108,7 +108,7 @@ def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
     start_global = 1
     start_epoch = 1
     if checkpoint:
-        load_from_checkpoint(net, checkpoint, partial_restore=False)
+        load_from_checkpoint(net, checkpoint, partial_restore=False, device='cpu')
 
     print("current learn rate: ", lr)
 
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     device_ids = [int(d) for d in args.device.split(',')]
     lin_cls = args.lin
 
-    device = get_device(device_ids, allow_cpu=False)
+    device = get_device(device_ids, allow_cpu=True)
 
     config = read_yaml(config_file)
     config['local_device_ids'] = device_ids

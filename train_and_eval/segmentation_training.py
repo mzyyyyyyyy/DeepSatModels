@@ -5,6 +5,10 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.tensorboard import SummaryWriter
 import numpy as np
+
+import sys
+sys.path.append('./')
+
 from models import get_model
 from utils.config_files_utils import read_yaml, copy_yaml, get_params_values
 from utils.torch_utils import get_device, get_net_trainable_params, load_from_checkpoint
@@ -100,8 +104,8 @@ def train_and_evaluate(net, dataloaders, config, device):
     #------------------------------------------------------------------------------------------------------------------#
     num_classes = config['MODEL']['num_classes']
     num_epochs = config['SOLVER']['num_epochs']
-    lr = config['SOLVER']['lr_base']
-    dr = config['SOLVER']['lr_decay']
+    lr = float(config['SOLVER']['lr_base'])
+    dr = float(config['SOLVER']['lr_decay'])
     reset_lr = config['SOLVER']['reset_lr']
     reset_lr_at_epoch = get_params_values(config['SOLVER'], "reset_lr_at_epoch", False)
     train_metrics_steps = config['CHECKPOINT']['train_metrics_steps']
@@ -114,12 +118,12 @@ def train_and_evaluate(net, dataloaders, config, device):
     local_device_ids = config['local_device_ids']
     weight_decay = get_params_values(config['SOLVER'], "weight_decay", 0)
     dr_epochs = get_params_values(config['SOLVER'], "dr_epochs", 2)
-    restart_clock = get_params_values(config['CHECKPOINT'], "restart_clock", False)
+    restart_clock = get_params_values(config['CHECKPOINT'], "restart_clock", True)
 
     start_global = 1
     start_epoch = 1
     if checkpoint_path:
-        checkpoint_path = load_from_checkpoint(net, checkpoint_path, partial_restore=partial_restore)
+        checkpoint_path = load_from_checkpoint(net, checkpoint_path, partial_restore=partial_restore, device='cpu')
         if restart_clock:
             start_global = 1
             start_epoch = 1
@@ -218,7 +222,7 @@ if __name__ == "__main__":
     config_file = opt.config_file
 
     device_ids = [int(i) for i in gpu_ids if i.isnumeric()]
-    device = get_device(device_ids, allow_cpu=False)
+    device = get_device(device_ids, allow_cpu=True)
 
     config = read_yaml(config_file)
     config['local_device_ids'] = device_ids
