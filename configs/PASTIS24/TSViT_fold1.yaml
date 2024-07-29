@@ -14,6 +14,7 @@ MODEL:
   heads: 4
   pool: 'cls'
   dim_head: 32
+  # dim_head = dim / head
   emb_dropout: 0.
   scale_dim: 4
 
@@ -30,7 +31,7 @@ DATASETS:
     dataset: "PASTIS24_fold1"
     label_map:
     max_seq_len: 60
-    batch_size: 24
+    batch_size: 384
     extra_data:
     num_workers: 4
 

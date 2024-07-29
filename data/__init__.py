@@ -88,6 +88,12 @@ def get_model_data_input(config):
 def get_loss_data_input(config):
 
     def segmentation_ground_truths(sample, device):
+    # 要想继续知道 sample 具体的数据结构，
+    # 需要更深入到如何将 PASTIS 转换成 .pickel 文件的代码中
+
+    # 审视当前任务：我只需要选择类别为 1 的标签值，
+    # 完成这件任务并不需要理解生成 unk_masks 的代码。
+    # 所以，暂时不深入。
         labels = sample['labels'].to(device)
         if 'unk_masks' in sample.keys():
             unk_masks = sample['unk_masks'].to(device)
