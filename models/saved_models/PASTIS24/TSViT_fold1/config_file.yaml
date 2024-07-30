@@ -1,13 +1,13 @@
 CHECKPOINT:
   eval_steps: 2000
-  load_from_checkpoint: D:\\DeepSatModels\\PASTIS24_checkpoints\\TSViT_fold1
+  load_from_checkpoint: ./PASTIS24_checkpoints/TSViT_fold1
   partial_restore: false
   save_path: models/saved_models/PASTIS24/TSViT_fold1
   save_steps: 20000000000
   train_metrics_steps: 250
 DATASETS:
   eval:
-    base_dir: D:\DeepSatModels\data\PASTIS24\DATA\PASTIS24
+    base_dir: /root/autodl-tmp/PASTIS24/DATA
     batch_size: 24
     bidir_input: false
     dataset: PASTIS24_fold1
@@ -15,7 +15,7 @@ DATASETS:
     label_map: null
     max_seq_len: 60
     num_workers: 4
-    paths: D:\DeepSatModels\data\PASTIS24\DATA\PASTIS24\fold-paths\fold_4_paths.csv
+    paths: /root/autodl-tmp/PASTIS24/DATA/fold-paths/fold_4_paths.csv
   test:
     batch_size: 24
     dataset: PASTIS24_fold1
@@ -24,7 +24,7 @@ DATASETS:
     max_seq_len: 60
     num_workers: 4
   train:
-    base_dir: D:\DeepSatModels\data\PASTIS24\DATA\PASTIS24
+    base_dir: /root/autodl-tmp/PASTIS24/DATA
     batch_size: 16
     bidir_input: false
     dataset: PASTIS24_fold1
@@ -32,7 +32,7 @@ DATASETS:
     label_map: null
     max_seq_len: 60
     num_workers: 4
-    paths: D:\DeepSatModels\data\PASTIS24\DATA\PASTIS24\fold-paths\folds_1_123_paths.csv
+    paths: /root/autodl-tmp/PASTIS24/DATA/fold-paths/folds_1_123_paths.csv
 MODEL:
   architecture: TSViT
   dim: 128
@@ -60,8 +60,8 @@ SOLVER:
   lr_scheduler: cosine
   lr_start: 1e-8
   num_cycles: 1
-  num_epochs: 100
-  num_warmup_epochs: 10
+  num_epochs: 20
+  num_warmup_epochs: 5
   reset_lr: true
   steps: (0, 80000)
   weight_decay: 0.0

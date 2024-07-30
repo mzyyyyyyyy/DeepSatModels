@@ -152,7 +152,9 @@ def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
                 batch_metrics = get_mean_metrics(
                     logits=logits, labels=labels, unk_masks=unk_masks, n_classes=num_classes, loss=loss, epoch=epoch,
                     step=step)
+                
                 write_mean_summaries(writer, batch_metrics, abs_step, mode="train", optimizer=optimizer)
+                
                 print("abs_step: %d, epoch: %d, step: %5d, loss: %.7f, batch_iou: %.4f, batch accuracy: %.4f, batch precision: %.4f, "
                       "batch recall: %.4f, batch F1: %.4f" %
                       (abs_step, epoch, step + 1, loss, batch_metrics['IOU'], batch_metrics['Accuracy'], batch_metrics['Precision'],
@@ -200,7 +202,7 @@ if __name__ == "__main__":
     device_ids = [int(d) for d in args.device.split(',')]
     lin_cls = args.lin
 
-    device = get_device(device_ids, allow_cpu=True)
+    device = get_device(device_ids, allow_cpu=False)
 
     config = read_yaml(config_file)
     config['local_device_ids'] = device_ids
