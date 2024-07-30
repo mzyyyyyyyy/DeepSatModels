@@ -151,7 +151,15 @@ class TSViT_single_token(nn.Module):
         x = x.reshape(-1, T, self.dim)
         cls_temporal_tokens = repeat(self.temporal_token, '() () d -> b t d', b=B * self.num_patches_1d ** 2, t=1)
         x = torch.cat((cls_temporal_tokens, x), dim=1)
+
         x = self.temporal_transformer(x)
+        cls_temporal_embedding = x[:, 0, :].clone()
+        other_embeddings = x[:, 1:, :].clone()
+        simil = F.cosine_similarity(cls_temporal_embedding.unsqueeze(1), other_embeddings, dim=2)
+        # shape = (16*12*12, 60)
+        normalized_simil = F.softmax(simil, dim=1)
+        # 用 softmax 函数归一化试试     
+
         x = x.mean(dim=1) if self.pool == 'mean' else x[:, 0]
         x = x.reshape(B, self.num_patches_1d**2, self.dim)
         x += self.space_pos_embedding#[:, :, :(n + 1)]
@@ -162,7 +170,7 @@ class TSViT_single_token(nn.Module):
         x = x.reshape(B, H*W, self.num_classes)
         x = x.reshape(B, H, W, self.num_classes)
         x = x.permute(0, 3, 1, 2)
-        return x
+        return x, normalized_simil
 
 
 class TSViT_static_position_encodings(nn.Module):

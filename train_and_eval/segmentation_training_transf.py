@@ -19,19 +19,57 @@ from metrics.loss_functions import get_loss
 from utils.summaries import write_mean_summaries, write_class_summaries
 from data import get_loss_data_input
 
+# 启用异常检测
+torch.autograd.set_detect_anomaly(True)
+
 
 def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
 
     def train_step(net, sample, loss_fn, optimizer, device, loss_input_fn):
         optimizer.zero_grad()
         # print(sample['inputs'].shape)
-        outputs = net(sample['inputs'].to(device))
+        outputs, cls_embedding = net(sample['inputs'].to(device))
         outputs = outputs.permute(0, 2, 3, 1)
         ground_truth = loss_input_fn(sample, device)
         loss = loss_fn['mean'](outputs, ground_truth)
-        loss.backward()
+        # 这里添加一个监督损失函数
+        Prior = [0.04038229070454944, 0.06657914164418673, 0.07865396226101676, 
+                 0.06657914164418673, 0.04038229070454944, 0.017550071195609224, 
+                 0.005465148750243429, 0.0012194395158768117, 0.00019496368015844016, 
+                 2.23348138654879e-05, 1.8333561309276872e-06, 1.0796859408083036e-07, 
+                 9.08885628000076e-09, 1.0796859408083036e-07, 1.8333561309276872e-06, 
+                 2.23348138654879e-05, 0.00019496368015844019, 0.0012194395158768158, 
+                 0.005465148750243941, 0.017550071195655256, 0.04038229070751874, 
+                 0.06657914178141656, 0.07865396680544491, 0.06657924947555097, 
+                 0.04038412405771107, 0.017572406009428675, 0.005660112430401359, 
+                 0.002438879031753615, 0.005660112430401359, 0.017572406009428675, 
+                 0.04038412405771107, 0.06657924947555097, 0.07865396680544491, 
+                 0.06657914178141656, 0.04038229070751874, 0.017550071195655256, 
+                 0.005465148750243941, 0.0012194395158768117, 0.00019496368015792877,
+                 2.233481381945242e-05, 1.8333531616347876e-06, 1.078313642418516e-07, 
+                 4.54442814000038e-09, 1.3722983897876466e-10, 2.969292899759878e-12, 
+                 4.603548241045495e-14, 5.114080147340586e-16, 4.0707790810615364e-18, 
+                 2.3217887948898078e-20, 9.488620133101572e-23, 2.7785523440006987e-25, 
+                 5.830009703784104e-28, 8.765065084108651e-31, 9.442265015400106e-34, 
+                 7.288403342248169e-37, 4.031101971930694e-40, 1.5975348564336958e-43, 
+                 4.536407647223706e-47, 9.230154651480211e-51, 1.345677695966951e-54]
+     
+        
+        Prior = torch.tensor(Prior).unsqueeze(0).expand(int(cls_embedding.shape[0]/(12*12))*12*12, -1).to(device)
+        # Prior.to(device)
+        # cls_embedding = torch.tensor(cls_embedding)
+        # cls_embedding.to(device)
+
+        # 注意，上一行代码里，针对 PASTIS24_fold1 数据集，训练集的 batch_size 是 16
+
+
+        loss_mse = nn.MSELoss()(Prior, cls_embedding)
+
+        loss_all = loss + loss_mse
+
+        loss_all.backward()
         optimizer.step()
-        return outputs, ground_truth, loss
+        return outputs, ground_truth, loss_all
   
     def evaluate(net, evalloader, loss_fn, config):
         num_classes = config['MODEL']['num_classes']
@@ -41,7 +79,7 @@ def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
         net.eval()
         with torch.no_grad():
             for step, sample in enumerate(evalloader):
-                logits = net(sample['inputs'].to(device))
+                logits, _ = net(sample['inputs'].to(device))
                 logits = logits.permute(0, 2, 3, 1)
                 _, predicted = torch.max(logits.data, -1)
                 ground_truth = loss_input_fn(sample, device)
@@ -100,7 +138,8 @@ def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
     eval_steps = config['CHECKPOINT']['eval_steps']
     save_steps = config['CHECKPOINT']["save_steps"]
     save_path = config['CHECKPOINT']["save_path"]
-    checkpoint = config['CHECKPOINT']["load_from_checkpoint"]
+    # checkpoint = config['CHECKPOINT']["load_from_checkpoint"]
+    checkpoint = None
     num_steps_train = len(dataloaders['train'])
     local_device_ids = config['local_device_ids']
     weight_decay = get_params_values(config['SOLVER'], "weight_decay", 0)
