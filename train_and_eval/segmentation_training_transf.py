@@ -146,7 +146,10 @@ def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
     start_global = 1
     start_epoch = 1
     if checkpoint:
-        load_from_checkpoint(net, checkpoint, partial_restore=True, device='cpu')
+        load_from_checkpoint(net, checkpoint, partial_restore=False, modified_model=True, device='cpu')
+    # 添加一个参数 modified_model，用来控制是否预处理预训练模型参数，使得能够应用在当前网络上。
+    
+
 
     print("current learn rate: ", lr)
 

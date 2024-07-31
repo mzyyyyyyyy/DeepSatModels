@@ -60,7 +60,7 @@ SOLVER:
 CHECKPOINT:
   load_from_checkpoint: './PASTIS24_checkpoints/TSViT_fold1'
   partial_restore: False
-  save_path: 'models/saved_models/PASTIS24_MSEloss_pretrained_partial/TSViT_fold1'
+  save_path: 'models/saved_models/PASTIS24_MSEloss_modified_pretrained/TSViT_fold1'
   train_metrics_steps: 250
   eval_steps: 2000
   save_steps: 20000000000

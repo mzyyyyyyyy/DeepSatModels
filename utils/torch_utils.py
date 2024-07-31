@@ -4,7 +4,7 @@ import glob
 import sys
 
 
-def load_from_checkpoint(net, checkpoint, partial_restore=False, device=None):
+def load_from_checkpoint(net, checkpoint, partial_restore=False, modified_model=False, device=None):
     
     assert checkpoint is not None, "no path provided for checkpoint, value is None"
     if os.path.isdir(checkpoint):
@@ -35,6 +35,40 @@ def load_from_checkpoint(net, checkpoint, partial_restore=False, device=None):
         for param in extra_params:
             saved_net[param] = net_dict[param]
 
+    if modified_model:
+        # 修改 temporal_token 并重新命名为与 TSViT_single_token 类中定义的一致
+        temporal_token = saved_net.pop('temporal_token')
+        temporal_token_single = temporal_token.mean(dim=1, keepdim=True)
+        saved_net['temporal_token_single'] = temporal_token_single
+        
+        # 修改 mlp_head 并重新命名为与 TSViT_single_token 类中定义的一致
+        
+        # print(saved_net['mlp_head.0.weight'].shape)
+        # print(saved_net['mlp_head.0.bias'].shape)
+        # print(saved_net['mlp_head.1.weight'].shape)
+        # print(saved_net['mlp_head.1.bias'].shape)
+
+        # print(net.state_dict()['mlp_head_single.0.weight'].shape)
+        # print(net.state_dict()['mlp_head_single.0.bias'].shape)
+        # print(net.state_dict()['mlp_head_single.1.weight'].shape)
+        # print(net.state_dict()['mlp_head_single.1.bias'].shape)
+
+        mlp_0_w = saved_net.pop('mlp_head.0.weight')
+        saved_net['mlp_head_single.0.weight'] = mlp_0_w
+
+        mlp_0_b = saved_net.pop('mlp_head.0.bias')
+        saved_net['mlp_head_single.0.bias'] = mlp_0_b
+
+        mlp_1_w = saved_net.pop('mlp_head.1.weight')
+        mlp_1_w_single = mlp_1_w.repeat_interleave(19, dim=0)[:76]
+        saved_net['mlp_head_single.1.weight'] = mlp_1_w_single
+
+        mlp_1_b = saved_net.pop('mlp_head.1.bias')
+        mlp_1_b_single = mlp_1_b.repeat_interleave(19, dim=0)[:76]
+        saved_net['mlp_head_single.1.bias'] = mlp_1_b_single                
+
+
+    
     net.load_state_dict(saved_net, strict=True)
     return checkpoint
 
