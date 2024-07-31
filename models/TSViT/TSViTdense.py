@@ -122,16 +122,16 @@ class TSViT_single_token(nn.Module):
         self.to_patch_embedding = nn.Sequential(
             Rearrange('b t c (h p1) (w p2) -> (b h w) t (p1 p2 c)', p1=self.patch_size, p2=self.patch_size),
             nn.Linear(patch_dim, self.dim))
-        self.to_temporal_embedding_input = nn.Linear(365, self.dim)
-        self.temporal_token = nn.Parameter(torch.randn(1, 1, self.dim))
-        print('temporal token: ', self.temporal_token.shape)
+        self.to_temporal_embedding_input = nn.Linear(366, self.dim)
+        self.temporal_token_single = nn.Parameter(torch.randn(1, 1, self.dim))
+        print('temporal token: ', self.temporal_token_single.shape)
         self.temporal_transformer = Transformer(self.dim, self.temporal_depth, self.heads, self.dim_head,
                                                 self.dim * self.scale_dim, self.dropout)
         self.space_pos_embedding = nn.Parameter(torch.randn(1, num_patches, self.dim))
         print('space pos embedding: ', self.space_pos_embedding.shape)
         self.space_transformer = Transformer(self.dim, self.spatial_depth, self.heads, self.dim_head, self.dim * self.scale_dim, self.dropout)
         self.dropout = nn.Dropout(self.emb_dropout)
-        self.mlp_head = nn.Sequential(
+        self.mlp_head_single = nn.Sequential(
             nn.LayerNorm(self.dim),
             nn.Linear(self.dim, self.num_classes * self.patch_size**2))
 
@@ -142,14 +142,14 @@ class TSViT_single_token(nn.Module):
         xt = x[:, :, -1, 0, 0]
         x = x[:, :, :-1]
         xt = (xt * 365.0001).to(torch.int64)
-        xt = F.one_hot(xt, num_classes=365).to(torch.float32)
-        xt = xt.reshape(-1, 365)
+        xt = F.one_hot(xt, num_classes=366).to(torch.float32)
+        xt = xt.reshape(-1, 366)
         temporal_pos_embedding = self.to_temporal_embedding_input(xt).reshape(B, T, self.dim)
         x = self.to_patch_embedding(x)
         x = x.reshape(B, -1, T, self.dim)
         x += temporal_pos_embedding.unsqueeze(1)
         x = x.reshape(-1, T, self.dim)
-        cls_temporal_tokens = repeat(self.temporal_token, '() () d -> b t d', b=B * self.num_patches_1d ** 2, t=1)
+        cls_temporal_tokens = repeat(self.temporal_token_single, '() () d -> b t d', b=B * self.num_patches_1d ** 2, t=1)
         x = torch.cat((cls_temporal_tokens, x), dim=1)
 
         x = self.temporal_transformer(x)
@@ -165,7 +165,7 @@ class TSViT_single_token(nn.Module):
         x += self.space_pos_embedding#[:, :, :(n + 1)]
         x = self.dropout(x)
         x = self.space_transformer(x)
-        x = self.mlp_head(x)
+        x = self.mlp_head_single(x)
         x = x.reshape(B, self.num_patches_1d**2, self.patch_size**2, self.num_classes)
         x = x.reshape(B, H*W, self.num_classes)
         x = x.reshape(B, H, W, self.num_classes)

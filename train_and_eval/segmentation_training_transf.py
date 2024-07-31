@@ -138,8 +138,7 @@ def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
     eval_steps = config['CHECKPOINT']['eval_steps']
     save_steps = config['CHECKPOINT']["save_steps"]
     save_path = config['CHECKPOINT']["save_path"]
-    # checkpoint = config['CHECKPOINT']["load_from_checkpoint"]
-    checkpoint = None
+    checkpoint = config['CHECKPOINT']["load_from_checkpoint"]
     num_steps_train = len(dataloaders['train'])
     local_device_ids = config['local_device_ids']
     weight_decay = get_params_values(config['SOLVER'], "weight_decay", 0)
@@ -147,7 +146,7 @@ def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
     start_global = 1
     start_epoch = 1
     if checkpoint:
-        load_from_checkpoint(net, checkpoint, partial_restore=False, device='cpu')
+        load_from_checkpoint(net, checkpoint, partial_restore=True, device='cpu')
 
     print("current learn rate: ", lr)
 
