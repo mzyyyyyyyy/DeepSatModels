@@ -132,9 +132,12 @@ if __name__ == "__main__":
 
     checkpoint = config['CHECKPOINT']["load_from_checkpoint"]
     if checkpoint:
-        load_from_checkpoint(net, checkpoint, partial_restore=False, device='cpu')
+        load_from_checkpoint(net, checkpoint, partial_restore=True, device='cpu')
 
     net.to(device)
+
+    print(net.temporal_token.shape)
+    
 
     loss_input_fn = get_loss_data_input(config)
     loss_fn = {'all': get_loss(config, device, reduction=None),
