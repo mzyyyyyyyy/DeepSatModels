@@ -12,7 +12,7 @@ from scipy import ndimage
 def PASTIS_segmentation_transform(model_config, is_training):
     """
     """
-    dataset_img_res = 24
+    dataset_img_res = model_config['img_res']
     input_img_res = model_config['img_res']
     ground_truths = ['labels']
     max_seq_len = model_config['max_seq_len']
@@ -27,7 +27,7 @@ def PASTIS_segmentation_transform(model_config, is_training):
 
     transform_list.append(TileDates(H=model_config['img_res'], W=model_config['img_res'], doy_bins=None))                       # tile day and year to shape TxWxHx1
     transform_list.append(CutOrPad(max_seq_len=max_seq_len, random_sample=False, from_start=True))  # pad with zeros to maximum sequence length
-    transform_list.append(UnkMask(unk_class=19, ground_truth_target='labels'))  # extract unknown label mask
+    transform_list.append(UnkMask(unk_class=model_config['num_classes'], ground_truth_target='labels'))  # extract unknown label mask
 
     if inputs_backward:
         transform_list.append(AddBackwardInputs())
@@ -62,7 +62,7 @@ class ToTensor(object):
     def __call__(self, sample):
         tensor_sample = {}
         tensor_sample['inputs'] = torch.tensor(sample['img']).to(torch.float32)
-        tensor_sample['labels'] = torch.tensor(sample['labels'][0].astype(np.float32)).to(torch.float32).unsqueeze(-1)
+        tensor_sample['labels'] = torch.tensor(sample['labels'].astype(np.float32)).to(torch.float32).unsqueeze(-1)
         tensor_sample['doy'] = torch.tensor(np.array(sample['doy'])).to(torch.float32)
         return tensor_sample
 

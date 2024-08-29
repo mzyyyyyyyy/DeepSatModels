@@ -1,0 +1,19 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "GXData",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/train_and_eval/segmentation_training_transf.py",  // 指定你的脚本路径
+            "args": [
+                "--config", 
+                "configs/GXData/TSViT_fold1.yaml"  // 传递你的命令行参数
+            ],
+                "console": "integratedTerminal"
+        }
+    ]
+}
