@@ -10,10 +10,10 @@ T31TFM_1618:
 
 # PASTIS24 benchmark -------------------------------------------------------------------------------------------------
 PASTIS24_fold1:
-    basedir: "/root/autodl-tmp/PASTIS24/DATA"
-    paths_train: "/root/autodl-tmp/PASTIS24/DATA/fold-paths/folds_1_123_paths.csv"
-    paths_eval: "/root/autodl-tmp/PASTIS24/DATA/fold-paths/fold_4_paths.csv"
-    paths_test: "/root/autodl-tmp/PASTIS24/DATA/fold-paths/fold_5_paths.csv"
+    basedir: "/root/autodl-tmp/GXData"
+    paths_train: "/root/autodl-tmp/GXData/fold-paths/folds_1_123_paths.csv"
+    paths_eval: "/root/autodl-tmp/GXData/fold-paths/fold_4_paths.csv"
+    paths_test: "/root/autodl-tmp/GXData/fold-paths/fold_5_paths.csv"
 
 PASTIS24_fold2:
     basedir: "~/autodl-tmp/PASTIS24/DATA"
