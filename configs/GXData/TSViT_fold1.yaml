@@ -5,7 +5,7 @@ MODEL:
   num_channels: 11
   num_features: 16
   num_classes: 12
-  ignore_background: true
+  ignore_background: 0
   dropout: 0.
   patch_size: 2
   dim: 128
@@ -43,7 +43,7 @@ DATASETS:
     num_workers: 4
 
 SOLVER:
-  num_epochs: 25
+  num_epochs: 100
   num_warmup_epochs: 5
   steps: (0, 80000)
   loss_function:  masked_cross_entropy
@@ -60,7 +60,7 @@ SOLVER:
 CHECKPOINT:
   load_from_checkpoint: './PASTIS24_checkpoints/TSViT_fold1'
   partial_restore: False
-  save_path: '/root/autodl-tmp/GXData_MSELoss_ignore_result'
+  save_path: '/root/autodl-tmp/GXData_MSELoss_ignore_result_cls0_1_epoch100'
   train_metrics_steps: 250
   eval_steps: 2000
   save_steps: 20000000000

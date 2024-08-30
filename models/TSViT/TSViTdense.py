@@ -157,6 +157,7 @@ class TSViT_single_token(nn.Module):
         other_embeddings = x[:, 1:, :].clone()
         simil = F.cosine_similarity(cls_temporal_embedding.unsqueeze(1), other_embeddings, dim=2)
         # shape = (16*12*12, 60)
+        # 在两个 GPU 上训练的时候，这里的 batch_size 是 8，可能原因是将 16 个 batch 平均分到了两个 GPU 上进行训练。
         normalized_simil = F.softmax(simil, dim=1)
         # 用 softmax 函数归一化试试     
 

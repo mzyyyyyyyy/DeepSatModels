@@ -27,7 +27,7 @@ def PASTIS_segmentation_transform(model_config, is_training):
 
     transform_list.append(TileDates(H=model_config['img_res'], W=model_config['img_res'], doy_bins=None))                       # tile day and year to shape TxWxHx1
     transform_list.append(CutOrPad(max_seq_len=max_seq_len, random_sample=False, from_start=True))  # pad with zeros to maximum sequence length
-    transform_list.append(UnkMask(unk_class=model_config['num_classes'], ground_truth_target='labels'))  # extract unknown label mask
+    transform_list.append(UnkMask(unk_class=model_config['ignore_background'], ground_truth_target='labels'))  # extract unknown label mask
 
     if inputs_backward:
         transform_list.append(AddBackwardInputs())
