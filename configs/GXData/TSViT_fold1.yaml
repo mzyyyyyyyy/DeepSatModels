@@ -6,7 +6,7 @@ MODEL:
   # PASTIS 数据的 channel 和 GXData 数据的 channel 都是 10, 多了的 1 是用来存储 time_step 的。
   num_features: 16
   num_classes: 12
-  ignore_background: False
+  ignore_background: 0
   dropout: 0.
   patch_size: 2
   dim: 128
@@ -61,7 +61,7 @@ SOLVER:
 CHECKPOINT:
   load_from_checkpoint: './PASTIS24_checkpoints/TSViT_fold1'
   partial_restore: False
-  save_path: '/root/autodl-tmp/GXData_result'
+  save_path: '/root/autodl-tmp/GXData_result_ignore'
   train_metrics_steps: 250
   eval_steps: 2000
   save_steps: 20000000000
