@@ -14,14 +14,16 @@ from metrics.numpy_metrics import get_classification_metrics, get_per_class_loss
 from metrics.loss_functions import get_loss
 from data import get_loss_data_input
 
-def evaluate(net, evalloader, loss_fn, config, device, loss_input_fn):
-    num_classes = config['MODEL']['num_classes']
+from tqdm import tqdm
+
+def test(net, evalloader, loss_fn, config, device, loss_input_fn):
+    num_classes = config['MODEL']['num_classes'] - len(config['MODEL']['ignore_background'])
     predicted_all = []
     labels_all = []
     losses_all = []
     net.eval()
     with torch.no_grad():
-        for step, sample in enumerate(evalloader):
+        for step, sample in tqdm(enumerate(evalloader)):
             logits = net(sample['inputs'].to(device))
             logits = logits.permute(0, 2, 3, 1)
             _, predicted = torch.max(logits.data, -1)
@@ -48,14 +50,14 @@ def evaluate(net, evalloader, loss_fn, config, device, loss_input_fn):
             micro_acc, micro_precision, micro_recall, micro_F1, micro_IOU = eval_metrics['micro']
             macro_acc, macro_precision, macro_recall, macro_F1, macro_IOU = eval_metrics['macro']
 
-            print(f"Batch {step + 1}:")
-            print(f"Loss: {losses.mean():.7f}")
-            print(f"Micro IOU: {micro_IOU:.4f}, Macro IOU: {macro_IOU:.4f}")
-            print(f"Micro Accuracy: {micro_acc:.4f}, Macro Accuracy: {macro_acc:.4f}")
-            print(f"Micro Precision: {micro_precision:.4f}, Macro Precision: {macro_precision:.4f}")
-            print(f"Micro Recall: {micro_recall:.4f}, Macro Recall: {macro_recall:.4f}")
-            print(f"Micro F1: {micro_F1:.4f}, Macro F1: {macro_F1:.4f}")
-            print("-" * 100)
+            # print(f"Batch {step + 1}:")
+            # print(f"Loss: {losses.mean():.7f}")
+            # print(f"Micro IOU: {micro_IOU:.4f}, Macro IOU: {macro_IOU:.4f}")
+            # print(f"Micro Accuracy: {micro_acc:.4f}, Macro Accuracy: {macro_acc:.4f}")
+            # print(f"Micro Precision: {micro_precision:.4f}, Macro Precision: {macro_precision:.4f}")
+            # print(f"Micro Recall: {micro_recall:.4f}, Macro Recall: {macro_recall:.4f}")
+            # print(f"Micro F1: {micro_F1:.4f}, Macro F1: {macro_F1:.4f}")
+            # print("-" * 100)
 
 
 
@@ -124,5 +126,5 @@ if __name__ == "__main__":
     loss_fn = {'all': get_loss(config, device, reduction=None),
                'mean': get_loss(config, device, reduction="mean")}
 
-    eval_metrics = evaluate(net, dataloaders['eval'], loss_fn, config, device, loss_input_fn)
-    print(eval_metrics)
+    test_metrics = test(net, dataloaders['test'], loss_fn, config, device, loss_input_fn)
+    print(test_metrics)

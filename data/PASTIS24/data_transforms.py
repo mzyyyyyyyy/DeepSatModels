@@ -12,7 +12,7 @@ from scipy import ndimage
 def PASTIS_segmentation_transform(model_config, is_training):
     """
     """
-    dataset_img_res = 24
+    dataset_img_res = model_config['img_res']
     input_img_res = model_config['img_res']
     ground_truths = ['labels']
     max_seq_len = model_config['max_seq_len']
@@ -27,7 +27,7 @@ def PASTIS_segmentation_transform(model_config, is_training):
 
     transform_list.append(TileDates(H=model_config['img_res'], W=model_config['img_res'], doy_bins=None))                       # tile day and year to shape TxWxHx1
     transform_list.append(CutOrPad(max_seq_len=max_seq_len, random_sample=False, from_start=True))  # pad with zeros to maximum sequence length
-    transform_list.append(UnkMask(unk_class=19, ground_truth_target='labels'))  # extract unknown label mask
+    transform_list.append(UnkMask(unk_class=model_config['ignore_background'], ground_truth_target='labels'))  # extract unknown label mask
 
     if inputs_backward:
         transform_list.append(AddBackwardInputs())
@@ -62,7 +62,7 @@ class ToTensor(object):
     def __call__(self, sample):
         tensor_sample = {}
         tensor_sample['inputs'] = torch.tensor(sample['img']).to(torch.float32)
-        tensor_sample['labels'] = torch.tensor(sample['labels'][0].astype(np.float32)).to(torch.float32).unsqueeze(-1)
+        tensor_sample['labels'] = torch.tensor(sample['labels'].astype(np.float32)).to(torch.float32).unsqueeze(-1)
         tensor_sample['doy'] = torch.tensor(np.array(sample['doy'])).to(torch.float32)
         return tensor_sample
 
@@ -368,12 +368,22 @@ class UnkMask(object):
     """
 
     def __init__(self, unk_class, ground_truth_target):
-        assert isinstance(unk_class, (int,))
-        self.unk_class = unk_class
-        self.ground_truth_target = ground_truth_target
+        # unk_class 可以是一个整数或整数列表
+        if isinstance(unk_class, int):
+            self.unk_class = [unk_class]
+        elif isinstance(unk_class, list):
+            self.unk_class = unk_class
+        else:
+            raise TypeError("unk_class should be an int or a list of ints")
+        self.ground_truth_target = ground_truth_target        
+
 
     def __call__(self, sample):
-        sample['unk_masks'] = (sample[self.ground_truth_target] != self.unk_class) #& \
+        # 标记已知类别为True，未知类别为False
+        sample['unk_masks'] = torch.ones_like(sample[self.ground_truth_target], dtype=torch.bool)
+        # 对于每个未知类别，生成掩码并叠加到unk_masks中
+        for unk in self.unk_class:
+            sample['unk_masks'] &= (sample[self.ground_truth_target] != unk)
         if 'labels_grid' in sample.keys():
             sample['unk_masks_grid'] = self.rescale_2d_map(sample['unk_masks'].to(torch.float32), mode='nearest').to(
                 torch.bool)
@@ -385,6 +395,7 @@ class UnkMask(object):
         img = F.upsample(img, size=(self.num_grid, self.num_grid), mode=mode)
         img = img.squeeze(0).permute(1, 2, 0)  # move back
         return img
+
 
 
 # 12
