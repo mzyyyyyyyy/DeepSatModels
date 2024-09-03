@@ -34,7 +34,7 @@ def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
         return outputs, ground_truth, loss
   
     def evaluate(net, evalloader, loss_fn, config):
-        num_classes = config['MODEL']['num_classes']
+        num_classes = config['MODEL']['num_classes'] - len(config['MODEL']['ignore_background'])
         predicted_all = []
         labels_all = []
         losses_all = []
@@ -70,6 +70,7 @@ def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
         micro_acc, micro_precision, micro_recall, micro_F1, micro_IOU = eval_metrics['micro']
         macro_acc, macro_precision, macro_recall, macro_F1, macro_IOU = eval_metrics['macro']
         class_acc, class_precision, class_recall, class_F1, class_IOU = eval_metrics['class']
+        # 这里 class_acc 有问题
 
         un_labels, class_loss = get_per_class_loss(losses, target_classes, unk_masks=None)
 
@@ -93,7 +94,7 @@ def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
                 )
 
     #------------------------------------------------------------------------------------------------------------------#
-    num_classes = config['MODEL']['num_classes']
+    num_classes = config['MODEL']['num_classes'] - len(config['MODEL']['ignore_background'])
     num_epochs = config['SOLVER']['num_epochs']
     lr = float(config['SOLVER']['lr_base'])
     train_metrics_steps = config['CHECKPOINT']['train_metrics_steps']

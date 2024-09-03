@@ -6,7 +6,7 @@ MODEL:
   # PASTIS 数据的 channel 和 GXData 数据的 channel 都是 10, 多了的 1 是用来存储 time_step 的。
   num_features: 16
   num_classes: 12
-  ignore_background: 0
+  ignore_background: [0]
   dropout: 0.
   patch_size: 2
   dim: 128
@@ -22,7 +22,7 @@ DATASETS:
   train:
     dataset: "PASTIS24_fold1"
     label_map:
-    max_seq_len: 60
+    max_seq_len: 80
     batch_size: 16
     extra_data:
     num_workers: 4
@@ -30,7 +30,7 @@ DATASETS:
   eval:
     dataset: "PASTIS24_fold1"
     label_map:
-    max_seq_len: 60
+    max_seq_len: 80
     batch_size: 24
     extra_data:
     num_workers: 4
@@ -38,7 +38,7 @@ DATASETS:
   test:
     dataset: "PASTIS24_fold1"
     label_map:
-    max_seq_len: 60
+    max_seq_len: 80
     batch_size: 24
     extra_data:
     num_workers: 4
@@ -61,7 +61,7 @@ SOLVER:
 CHECKPOINT:
   load_from_checkpoint: './PASTIS24_checkpoints/TSViT_fold1'
   partial_restore: False
-  save_path: '/root/autodl-tmp/GXData_result_ignore'
-  train_metrics_steps: 250
-  eval_steps: 2000
+  save_path: '/root/autodl-tmp/GXData_result_ignore_cls0_modified'
+  train_metrics_steps: 100
+  eval_steps: 500
   save_steps: 20000000000

@@ -45,7 +45,8 @@ def get_prediction_splits(predicted, labels, n_classes):
 
     num_total = []
     num_correct = []
-    for class_ in range(n_classes):
+    for class_ in range(1, 12):
+    # 原来是这里出错了
         idx = labels == class_
         is_correct = predicted[idx] == labels[idx]
         if is_correct.size == 0:
@@ -90,11 +91,12 @@ def get_classification_metrics(predicted, labels, n_classes, unk_masks=None):
         predicted = predicted[unk_masks]
         labels = labels[unk_masks]
     TP, FP, FN, num_correct, num_total, IOU, micro_IOU = get_prediction_splits(predicted, labels, n_classes) #  , per_class)
-    micro_acc, micro_precision, micro_recall, micro_F1 = \
-        get_metrics_from_splits(TP.sum(), FP.sum(), FN.sum(), num_correct.sum(), num_total.sum())
+    # num_correct, num_total 的 nan 位置有问题。
+    TP_sum, FP_sum, FN_sum, num_correct_sum, num_total_sum = TP.sum(), FP.sum(), FN.sum(), num_correct.sum(), num_total.sum()
+    micro_acc, micro_precision, micro_recall, micro_F1 = get_metrics_from_splits(TP_sum, FP_sum, FN_sum, num_correct_sum, num_total_sum)
+    # 如果出问题，就可能出现在这个函数里
     macro_IOU = IOU[~np.isnan(IOU)].mean()
-    acc, precision, recall, F1 = \
-        get_metrics_from_splits(TP, FP, FN, num_correct, num_total)
+    acc, precision, recall, F1 = get_metrics_from_splits(TP, FP, FN, num_correct, num_total)
     macro_acc = nan_mean(acc)
     macro_precision = nan_mean(precision)
     macro_recall = nan_mean(recall)
