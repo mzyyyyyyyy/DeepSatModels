@@ -31,7 +31,7 @@ DATASETS:
     dataset: "PASTIS24_fold1"
     label_map:
     max_seq_len: 60
-    batch_size: 384
+    batch_size: 24
     extra_data:
     num_workers: 4
 

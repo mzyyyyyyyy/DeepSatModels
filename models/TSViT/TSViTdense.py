@@ -19,10 +19,10 @@ class Transformer(nn.Module):
                 PreNorm(dim, FeedForward(dim, mlp_dim, dropout=dropout))
             ]))
 
-    def forward(self, x, gt):
+    def forward(self, x):
         for attn, ff in self.layers:
-            x = attn(x, gt) + x
-            x = ff(x, gt) + x
+            x = attn(x) + x
+            x = ff(x) + x
         return self.norm(x)
 
 
@@ -408,73 +408,40 @@ class TSViT(nn.Module):
             nn.Linear(self.dim, self.patch_size**2)
         )
 
-    def forward(self, x, gt):
-        # 将标签处理成与 token 相同的 shape 
-        gt = gt.squeeze(-1)
-        gt = rearrange(gt, 'b (h p1) (w p2) -> (b h w) (p1 p2)', p1=self.patch_size, p2=self.patch_size)
-        gt = gt.mode(dim=-1)[0]
-        gt = gt.unsqueeze(-1)
-        # gt.shape = (24*12*12, 1)
-
-
+    def forward(self, x):
         x = x.permute(0, 1, 4, 2, 3)
         B, T, C, H, W = x.shape
 
-        
-        # 从输入数据中提取时序信息，并制作 temporal_pos_embedding
-        # 现在明白了为什么 xt 从 x 中选出，x 为什么取前十个波段
+
         xt = x[:, :, -1, 0, 0]
         x = x[:, :, :-1]
-        # x.shape = (24, 60, 10, 24, 24)
         xt = (xt * 365.0001).to(torch.int64)
-        # 原始的 xt 非常有可能被归一化成了 [0,1].
         xt = F.one_hot(xt, num_classes=366).to(torch.float32)
-        # one-hot 编码将每个整数值转换为一个长度为 366 的向量，
-        # 其中只有一个位置为 1，其他位置为 0 .
         xt = xt.reshape(-1, 366)
         temporal_pos_embedding = self.to_temporal_embedding_input(xt).reshape(B, T, self.dim)
-        # xt.shape = (24, 60, 128)
-        
-
-        # 加入 cls_tokens.
         x = self.to_patch_embedding(x)
         # shape = (24*12*12, 60, 128)
         x = x.reshape(B, -1, T, self.dim)
         x += temporal_pos_embedding.unsqueeze(1)
         x = x.reshape(-1, T, self.dim)
         cls_temporal_tokens = repeat(self.temporal_token, '() N d -> b N d', b=B * self.num_patches_1d ** 2)
-        # 随机生成的可训练的参数
-        # cls_temporal_tokens.shape = (24*12*12, 19, 128)
+
         x = torch.cat((cls_temporal_tokens, x), dim=1)
-        # x.shape = (24*12*12, 79, 128)
 
+        x = self.temporal_transformer(x)
 
-        # temporal_transformer 处理 ⭐
-        x = self.temporal_transformer(x, gt)
-        # x.shape = (24*12*12, 79, 128)
-        # 非常标准的 Transformer 处理。
-
-
-        # space_transformer 处理 ⭐
         x = x[:, :self.num_classes]
         x = x.reshape(B, self.num_patches_1d**2, self.num_classes, self.dim).permute(0, 2, 1, 3).reshape(B*self.num_classes, self.num_patches_1d**2, self.dim)
         # x.shape = (24*19, 12*12, 128)
         x += self.space_pos_embedding#[:, :, :(n + 1)]
         x = self.dropout(x)
-        x = self.space_transformer(x, gt)
-        # x.shape = (24*19, 12*12, 128)
+        x = self.space_transformer(x)
 
-
-        # 后处理与输出概率图
         x = self.mlp_head(x.reshape(-1, self.dim))
-        # x.shape = (24*19*12*12, 4)
-        # 这是很关键的维度变化，变换成正好可以输出原始分辨率的特征图。
+
         x = x.reshape(B, self.num_classes, self.num_patches_1d**2, self.patch_size**2).permute(0, 2, 3, 1)
-        # x.shape = (24, 12*12, 2*2, 19)
         x = x.reshape(B, H, W, self.num_classes)
-        # x.shape = (24, 24, 24, 19)
         x = x.permute(0, 3, 1, 2)
-        # x.shape = (24, 19, 24, 24)
         return x
 
 
