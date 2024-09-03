@@ -40,6 +40,7 @@ def get_prediction_splits(predicted, labels, n_classes):
     TP = (diag).astype(np.float32)
     FN = (rowsum - diag).astype(np.float32)
     FP = (colsum - diag).astype(np.float32)
+    # 对啊，md 这样算出来的 FN.sum 和 FP.sum 肯定相等啊
     IOU = diag / (rowsum + colsum - diag)
     macro_IOU = diag.sum() / (rowsum.sum() + colsum.sum() - diag.sum())
 
@@ -89,9 +90,13 @@ def get_classification_metrics(predicted, labels, n_classes, unk_masks=None):
     if unk_masks is not None:
         predicted = predicted[unk_masks]
         labels = labels[unk_masks]
+    
+    # micro
     TP, FP, FN, num_correct, num_total, IOU, micro_IOU = get_prediction_splits(predicted, labels, n_classes) #  , per_class)
     micro_acc, micro_precision, micro_recall, micro_F1 = \
         get_metrics_from_splits(TP.sum(), FP.sum(), FN.sum(), num_correct.sum(), num_total.sum())
+    
+    # macro
     macro_IOU = IOU[~np.isnan(IOU)].mean()
     acc, precision, recall, F1 = \
         get_metrics_from_splits(TP, FP, FN, num_correct, num_total)
@@ -99,11 +104,15 @@ def get_classification_metrics(predicted, labels, n_classes, unk_masks=None):
     macro_precision = nan_mean(precision)
     macro_recall = nan_mean(recall)
     macro_F1 = nan_mean(F1)
+    
+    # class
     acc = np.nan_to_num(acc, copy=True, nan=0.0)
+    # 将 nan 值替换为 0.0，所以当结果中有 0.0 的时候，说明该类训练失败。
     precision = np.nan_to_num(precision, copy=True, nan=0.0)
     recall = np.nan_to_num(recall, copy=True, nan=0.0)
     F1 = np.nan_to_num(F1, copy=True, nan=0.0)
     IOU = np.nan_to_num(IOU, copy=True, nan=0.0)
+
     return {'class': [acc, precision, recall, F1, IOU],
             'micro': [micro_acc, micro_precision, micro_recall, micro_F1, micro_IOU],
             'macro': [macro_acc, macro_precision, macro_recall, macro_F1, macro_IOU]}

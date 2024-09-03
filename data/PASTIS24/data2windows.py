@@ -5,6 +5,7 @@ import pickle
 import datetime
 import torch
 import argparse
+from tqdm import tqdm
 
 
 def get_doy(date):
@@ -36,32 +37,32 @@ if __name__ == "__main__":
                         help='PASTIS24 root dir')
     parser.add_argument('--savedir', type=str, default="",
                         help='where to save new data')
-    parser.add_argument('--HWout', type=int, default=24,
+    parser.add_argument('--HWout', type=int, default=32,
                         help='size of extracted windows')
     args = parser.parse_args()
 
     rootdir = args.rootdir
     savedir = args.savedir
-    HWin = 128
+    HWin = 32
     HWout = args.HWout
 
-    meta_patch = gpd.read_file(os.path.join(rootdir, "metadata.geojson"))
+    meta_patch = gpd.read_file(os.path.join(rootdir, "metaGX_modi_temp_seq.geojson"))
 
     labels = []
-    for i in range(meta_patch.shape[0]):
-        print('doing file %d of %d' % (i, meta_patch.shape[0]))
-        img = np.load(os.path.join(rootdir, 'DATA_S2/S2_%d.npy' % meta_patch['ID_PATCH'].iloc[i]))
-        lab = np.load(os.path.join(rootdir, 'ANNOTATIONS/TARGET_%d.npy' % meta_patch['ID_PATCH'].iloc[i]))
-        ids = np.load(os.path.join(rootdir, 'ANNOTATIONS/ParcelIDs_%d.npy' % meta_patch['ID_PATCH'].iloc[i]))
+    for i in tqdm(range(meta_patch.shape[0])):
+        # print('doing file %d of %d' % (i, meta_patch.shape[0]))
+        img = np.load(os.path.join(rootdir, 'DATA_S2_modi_temp_seq/%d.npy' % meta_patch['ID_PATCH'].iloc[i]))
+        lab = np.load(os.path.join(rootdir, 'ANNOTATIONS/%d.npy' % meta_patch['ID_PATCH'].iloc[i]))
+        # ids = np.load(os.path.join(rootdir, 'ANNOTATIONS/ParcelIDs_%d.npy' % meta_patch['ID_PATCH'].iloc[i]))
         dates = meta_patch['dates-S2'].iloc[i]
         doy = np.array([get_doy(d) for d in dates.values()])
         idx = np.argsort(doy)
         img = img[idx]
         doy = doy[idx]
-        unfolded_images = unfold_reshape(torch.tensor(img), HWout).numpy()
+        unfolded_images = unfold_reshape(torch.tensor(img.astype(np.int16)), HWout).numpy()
         unfolded_labels = unfold_reshape(torch.tensor(lab), HWout).numpy()
 
-        for j in unfolded_images.shape[0]:
+        for j in range(unfolded_images.shape[0]):
             sample = {'img': unfolded_images[j], 'labels': unfolded_labels[j], 'doy': doy}
 
             with open(os.path.join(savedir, "%d_%d.pickle" % (meta_patch['ID_PATCH'].iloc[i], j)), "wb") as output_file:

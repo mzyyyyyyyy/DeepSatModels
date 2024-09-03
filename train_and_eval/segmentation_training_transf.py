@@ -102,6 +102,7 @@ def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
     save_path = config['CHECKPOINT']["save_path"]
     checkpoint = config['CHECKPOINT']["load_from_checkpoint"]
     num_steps_train = len(dataloaders['train'])
+    # 这里代表数据集被分成了几个 batch，如果 N/B 的结果是小数，则向上取整。
     local_device_ids = config['local_device_ids']
     weight_decay = get_params_values(config['SOLVER'], "weight_decay", 0)
 
