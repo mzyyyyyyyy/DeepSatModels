@@ -74,7 +74,7 @@ def get_dataloaders(config):
         dataloaders['test'] = get_pastis_dataloader(
             paths_file=test_config['paths'], root_dir=test_config['base_dir'],
             transform=PASTIS_segmentation_transform(model_config, is_training=False),
-            batch_size=test_config['batch_size'], shuffle=False, num_workers=test_config['num_workers'])
+            batch_size=test_config['batch_size'], shuffle=True, num_workers=test_config['num_workers'])
     else:
         dataloaders['eval'] = get_france_dataloader(
             paths_file=eval_config['paths'], root_dir=eval_config['base_dir'],

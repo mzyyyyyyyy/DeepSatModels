@@ -16,14 +16,14 @@ from data import get_loss_data_input
 
 from tqdm import tqdm
 
-def test(net, evalloader, loss_fn, config, device, loss_input_fn):
+def test(net, testloader, loss_fn, config, device, loss_input_fn):
     num_classes = config['MODEL']['num_classes'] - len(config['MODEL']['ignore_background'])
     predicted_all = []
     labels_all = []
     losses_all = []
     net.eval()
     with torch.no_grad():
-        for step, sample in tqdm(enumerate(evalloader)):
+        for step, sample in tqdm(enumerate(testloader)):
             logits = net(sample['inputs'].to(device))
             logits = logits.permute(0, 2, 3, 1)
             _, predicted = torch.max(logits.data, -1)
