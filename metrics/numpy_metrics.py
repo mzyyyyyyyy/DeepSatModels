@@ -45,7 +45,7 @@ def get_prediction_splits(predicted, labels, n_classes):
 
     num_total = []
     num_correct = []
-    for class_ in range(n_classes):
+    for class_ in range(1,12):
         idx = labels == class_
         is_correct = predicted[idx] == labels[idx]
         if is_correct.size == 0:

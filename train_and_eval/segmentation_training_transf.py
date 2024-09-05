@@ -101,7 +101,7 @@ def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
         return outputs, ground_truth, loss_all
   
     def evaluate(net, evalloader, loss_fn, config):
-        num_classes = config['MODEL']['num_classes']
+        num_classes = config['MODEL']['num_classes'] - len(config['MODEL']['ignore_background'])
         predicted_all = []
         labels_all = []
         losses_all = []
@@ -160,7 +160,7 @@ def train_and_evaluate(net, dataloaders, config, device, lin_cls=False):
                 )
 
     #------------------------------------------------------------------------------------------------------------------#
-    num_classes = config['MODEL']['num_classes']
+    num_classes = config['MODEL']['num_classes'] - len(config['MODEL']['ignore_background'])
     num_epochs = config['SOLVER']['num_epochs']
     lr = float(config['SOLVER']['lr_base'])
     train_metrics_steps = config['CHECKPOINT']['train_metrics_steps']
