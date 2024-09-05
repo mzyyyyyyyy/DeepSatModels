@@ -4,13 +4,14 @@
     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
-            "name": "vis_attn",
+            "name": "all_model",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/train_and_eval/attention_vis.py",
+            "program": "${workspaceFolder}/train_and_eval/visualize_result4all_models.py",
             "console": "integratedTerminal",
-            "args": ["--config", "configs/PASTIS24/TSViT_fold1.yaml"]
+            "justMyCode": false
         }
     ]
 }
