@@ -13,7 +13,8 @@
                 "--config", 
                 "configs/GXData/TSViT_fold1.yaml"  // 传递你的命令行参数
             ],
-                "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "justMyCode": false
         }
     ]
 }

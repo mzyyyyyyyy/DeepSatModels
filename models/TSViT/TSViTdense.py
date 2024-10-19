@@ -407,6 +407,8 @@ class TSViT(nn.Module):
             nn.LayerNorm(self.dim),
             nn.Linear(self.dim, self.patch_size**2)
         )
+        self.device = torch.device("cuda:0")
+
 
     def forward(self, x):
         x = x.permute(0, 1, 4, 2, 3)
@@ -426,6 +428,20 @@ class TSViT(nn.Module):
         cls_temporal_tokens = repeat(self.temporal_token, '() N d -> b N d', b=B * self.num_patches_1d ** 2)
         x = torch.cat((cls_temporal_tokens, x), dim=1)
         x = self.temporal_transformer(x)
+
+        device = x.device
+        cls_temporal_embedding = x[:, 0:self.num_classes, :].clone().to(device)
+        other_embeddings = x[:, self.num_classes:self.num_frames+self.num_classes, :].clone().to(device)
+        # similar = torch.zeros((cls_temporal_embedding.shape[0], self.num_classes, self.num_frames), device=device)
+        # shape = (b, num_cls, num_frames)
+        temp = []
+        for i in range(self.num_classes):
+            a = cls_temporal_embedding[:, i, :]
+            sim = F.cosine_similarity(a.unsqueeze(1), other_embeddings, dim=2)
+            norm_sim = F.softmax(sim, dim=1)
+            temp.append(norm_sim)
+        similar = torch.stack(temp, dim=1)
+
         x = x[:, :self.num_classes]
         x = x.reshape(B, self.num_patches_1d**2, self.num_classes, self.dim).permute(0, 2, 1, 3).reshape(B*self.num_classes, self.num_patches_1d**2, self.dim)
         x += self.space_pos_embedding#[:, :, :(n + 1)]
@@ -435,7 +451,7 @@ class TSViT(nn.Module):
         x = x.reshape(B, self.num_classes, self.num_patches_1d**2, self.patch_size**2).permute(0, 2, 3, 1)
         x = x.reshape(B, H, W, self.num_classes)
         x = x.permute(0, 3, 1, 2)
-        return x
+        return x, similar
 
 
 class TSViT_lookup(nn.Module):
