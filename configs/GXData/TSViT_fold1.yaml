@@ -59,7 +59,7 @@ SOLVER:
   weight_decay: 0.000
 
 CHECKPOINT:
-  load_from_checkpoint: 'D:\\DeepSatModels_SavedModels\\saved_models\\GXData_result_ignore_cls0_modified'
+  load_from_checkpoint: 'D:\\DeepSatModels_SavedModels\\saved_models\\GXData_result_mseloss_multitokens_ignore_cls0_epoch100'
   partial_restore: False
   save_path: 'D:\\DeepSatModels_SavedModels\\saved_models\\GXData_test_data\\TSViT_fold1'
   train_metrics_steps: 250

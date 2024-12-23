@@ -24,7 +24,7 @@ def save_distribution_to_csv(distribution, output_file):
             writer.writerow([value])
 
 # 使用示例
-mean_centers = [16, 50, 57]
+mean_centers = [16, 43, 76]
 std_dev = 3
 value_range = np.arange(0, 80)
 

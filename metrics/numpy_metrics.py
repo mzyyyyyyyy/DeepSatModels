@@ -1,5 +1,7 @@
 import numpy as np
 from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 def confusion_mat(predicted, labels, n_classes):  # , unk_masks=None):
@@ -32,8 +34,18 @@ def confusion_mat(predicted, labels, n_classes):  # , unk_masks=None):
     return cm
 
 
-def get_prediction_splits(predicted, labels, n_classes):
+def get_prediction_splits(predicted, labels, n_classes, if_print_cm):
     cm = confusion_mat(predicted, labels, n_classes).astype(np.float32)
+
+    if if_print_cm == True:
+        plt.figure(figsize=(10, 7))
+        sns.heatmap(cm, annot=True, fmt='.2f', cmap='Blues')
+        plt.xlabel('Predicted')
+        plt.ylabel('Actual')
+        plt.title('Confusion Matrix')
+        plt.show()
+    
+
     diag = np.diagonal(cm)
     rowsum = cm.sum(axis=1)
     colsum = cm.sum(axis=0)
@@ -86,13 +98,13 @@ def nan_mean(v):
     return v[~np.isnan(v)].mean()
 
 
-def get_classification_metrics(predicted, labels, n_classes, unk_masks=None):
+def get_classification_metrics(predicted, labels, n_classes, cm=False, unk_masks=None):
     if unk_masks is not None:
         predicted = predicted[unk_masks]
         labels = labels[unk_masks]
     
     # micro
-    TP, FP, FN, num_correct, num_total, IOU, micro_IOU = get_prediction_splits(predicted, labels, n_classes) #  , per_class)
+    TP, FP, FN, num_correct, num_total, IOU, micro_IOU = get_prediction_splits(predicted, labels, n_classes, cm) #  , per_class)
     micro_acc, micro_precision, micro_recall, micro_F1 = \
         get_metrics_from_splits(TP.sum(), FP.sum(), FN.sum(), num_correct.sum(), num_total.sum())
     

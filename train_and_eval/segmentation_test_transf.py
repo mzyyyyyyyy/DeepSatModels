@@ -45,7 +45,7 @@ def test(net, testloader, loss_fn, config, device, loss_input_fn):
             losses = np.concatenate(losses_all)
 
             eval_metrics = get_classification_metrics(predicted=predicted_classes, labels=target_classes,
-                                                    n_classes=config['MODEL']['num_classes'], unk_masks=None)
+                                                    n_classes=config['MODEL']['num_classes'], cm=False, unk_masks=None)
 
             micro_acc, micro_precision, micro_recall, micro_F1, micro_IOU = eval_metrics['micro']
             macro_acc, macro_precision, macro_recall, macro_F1, macro_IOU = eval_metrics['macro']
@@ -69,7 +69,7 @@ def test(net, testloader, loss_fn, config, device, loss_input_fn):
         losses = np.concatenate(losses_all)
 
         eval_metrics = get_classification_metrics(predicted=predicted_classes, labels=target_classes,
-                                                  n_classes=num_classes, unk_masks=None)
+                                                  n_classes=num_classes, cm=True, unk_masks=None)
 
         micro_acc, micro_precision, micro_recall, micro_F1, micro_IOU = eval_metrics['micro']
         macro_acc, macro_precision, macro_recall, macro_F1, macro_IOU = eval_metrics['macro']

@@ -560,27 +560,40 @@ def recursive_todevice(x, device):
 
 
 def main():
-    
-    # 参数 for TSViT
+    batch_size = 4
+    device = 'cpu'
+
+    # 参数 for PTSViT
     config_file = "./configs/GXData/TSViT_fold1_vis.yaml"
     config = read_yaml(config_file)
     model_weights = 'D:\\DeepSatModels_SavedModels\\saved_models\\GXData_result_mseloss_multitokens_ignore_cls0_epoch100'
-    device = 'cpu'
-    batch_size = 4
+
+    # 参数 for TSViT-先拿别的试试
+    config_file_raw = "D:\\DeepSatModels_SavedModels\\saved_models\\GXData_MSELoss_ignore_result_cls0_epoch100\config_file.yaml"
+    config_raw = read_yaml(config_file_raw)
+    model_weights_raw = 'D:\\DeepSatModels_SavedModels\\saved_models\\GXData_MSELoss_ignore_result_cls0_epoch100'
 
     # 参数 for utae
     data_fold = 'D:\\PASTIS\\ALL_GXData'
     uate_weights_fold = 'D:\\PASTIS\\ALL_GXResult\\SemanticUtaeTrainOut'    
 
-
     # 加载模型和数据集 for TSViT
-    dataloaders_tsvit = get_dataloaders(config)
+    dataloaders_tsvit = get_dataloaders(config_raw)
     iterator_tsvit = dataloaders_tsvit['test'].__iter__()
-    tsvit = get_model(config, device)
-    checkpoint_tsvit = model_weights
+    tsvit = get_model(config_raw, device)
+    checkpoint_tsvit = model_weights_raw
     if checkpoint_tsvit:
         load_from_checkpoint(tsvit, checkpoint_tsvit, partial_restore=False, device='cpu')
     tsvit.to(device)
+
+    # 加载模型和数据集 for PTSViT
+    dataloaders_ptsvit = get_dataloaders(config)
+    iterator_ptsvit = dataloaders_ptsvit['test'].__iter__()
+    ptsvit = get_model(config, device)
+    checkpoint_ptsvit = model_weights
+    if checkpoint_ptsvit:
+        load_from_checkpoint(ptsvit, checkpoint_ptsvit, partial_restore=False, device='cpu')
+    ptsvit.to(device)
 
     # 加载模型和数据集 for utae
     dt = PASTIS_Dataset(folder=data_fold, norm=True,
@@ -592,59 +605,70 @@ def main():
     utae = load_model(uate_weights_fold, device=device, fold=1, mode='semantic').eval()    
 
     with torch.no_grad():
-        for (step_vit, batch_vit), (step_utae, batch_utae) in zip(enumerate(dataloaders_tsvit['test']), enumerate(dataloader_utae)):
-            logits_tsvit = tsvit(batch_vit['inputs'].to(device))
+        for (step_pvit, batch_pvit), (step_utae, batch_utae), (step_vit, batch_vit) in zip(enumerate(dataloaders_ptsvit['test']), enumerate(dataloader_utae), enumerate(dataloaders_tsvit["test"])):
+            logits_ptsvit = ptsvit(batch_pvit['inputs'].to(device))
             # batch_tsvit 包含四个属性：dict_keys(['inputs', 'labels', 'seq_lengths', 'unk_masks'])
-            logits_tsvit = logits_tsvit.permute(0, 2, 3, 1)
-            _, predicted_tsvit = torch.max(logits_tsvit.data, -1)
-            labels_tsvit = batch_vit['labels']
-            mask_tsvit = batch_vit['unk_masks']
-            mask_tsvit = mask_tsvit.squeeze()
-            predicted_tsvit[~mask_tsvit] = 0
+            logits_ptsvit = logits_ptsvit.permute(0, 2, 3, 1)
+            _, predicted_ptsvit = torch.max(logits_ptsvit.data, -1)
+            labels_ptsvit = batch_pvit['labels']
+            mask_ptsvit = batch_pvit['unk_masks']
+            mask_ptsvit = mask_ptsvit.squeeze()
+            predicted_ptsvit[~mask_ptsvit] = 0
 
             (x, dates), y, id_patch = batch_utae
             logits_utae = utae(x, batch_positions=dates)
             predicted_utae = logits_utae.argmax(dim=1)
             predicted_utae[y==0] = 0
 
+            logits_tsvit = tsvit(batch_pvit['inputs'].to(device))
+            # batch_tsvit 包含四个属性：dict_keys(['inputs', 'labels', 'seq_lengths', 'unk_masks'])
+            logits_tsvit = logits_tsvit.permute(0, 2, 3, 1)
+            _, predicted_tsvit = torch.max(logits_tsvit.data, -1)
+            labels_tsvit = batch_pvit['labels']
+            mask_tsvit = batch_pvit['unk_masks']
+            mask_tsvit = mask_tsvit.squeeze()
+            predicted_tsvit[~mask_tsvit] = 0
+
+
 
             # 推理结果可视化
-            size = 5
+            size = 3
             # 展示的图片大小
-            show_T = 4
-            fig, axes = plt.subplots(batch_size,show_T+3,figsize=((show_T+3)*size, batch_size*size))
+            fig, axes = plt.subplots(batch_size,4,figsize=((4)*size, batch_size*size))
             # 如何创建子图——也就是把展示图片的地方分成几块
 
             for b in range(batch_size):
-                # Plot S2 background
-                im = []
-                for t in range(show_T):
-                    t_seq = t * int((batch_vit['inputs'].shape[1])/show_T)
-                    im.append(get_rgb(batch_vit['inputs'], b=b, t_show=t_seq))
-                    axes[b, t].imshow(im[t])
-                    axes[b, t].axis('off')
-                    axes[0, t].set_title('S2-T{}'.format(t))
+                # Plot Semantic Segmentation prediction for utae
+                axes[b,0].matshow(predicted_utae[b].cpu().numpy(),
+                                cmap=def_color(),
+                                vmin=0,
+                                vmax=12)
+                axes[0,0].set_title('UTAE') 
+
 
                 # Plot Semantic Segmentation prediction for tsvit
-                axes[b,show_T].matshow(predicted_tsvit[b].cpu().numpy(),
+                axes[b,1].matshow(predicted_tsvit[b].cpu().numpy(),
                                 cmap=def_color(),
                                 vmin=0,
                                 vmax=12)
-                axes[0,show_T].set_title('TSViT_pheno')
+                axes[0,1].set_title('TSViT')
+        
 
-                # Plot Semantic Segmentation prediction for utae
-                axes[b,show_T+1].matshow(predicted_utae[b].cpu().numpy(),
+
+                # Plot Semantic Segmentation prediction for ptsvit
+                axes[b,2].matshow(predicted_ptsvit[b].cpu().numpy(),
                                 cmap=def_color(),
                                 vmin=0,
                                 vmax=12)
-                axes[0,show_T+1].set_title('UTAE')        
+                axes[0,2].set_title('PTSViT')
+      
 
                 # Plot GT
-                axes[b,show_T+2].matshow(labels_tsvit[b].cpu().numpy(),
+                axes[b,3].matshow(labels_ptsvit[b].cpu().numpy(),
                                 cmap=def_color(),
                                 vmin=0,
                                 vmax=12)
-                axes[0,show_T+2].set_title('GT')        
+                axes[0,3].set_title('GT')        
 
             # Class Labels
             fig, ax = plt.subplots(1,1, figsize=(3,8))
